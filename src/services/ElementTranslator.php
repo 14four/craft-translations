@@ -28,16 +28,16 @@ use acclaro\translations\Translations;
 
 class ElementTranslator
 {
-    public function toTranslationSource(Element $element)
+    public function toTranslationSource($element)
     {
         $source = array();
-        
-        // if ($element instanceof Element || $element instanceof Tag || $element instanceof Category) {
-        if ($element instanceof Element) {
+
+        // if ($element instanceof Entry || $element instanceof Tag || $element instanceof Category) {
+        if ($element instanceof Entry) {
             $source['title'] = $element->title;
             $source['slug'] = $element->slug;
         }
-        
+
         foreach ($element->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
             $fieldSource = $this->fieldToTranslationSource($element, $field);
@@ -58,11 +58,11 @@ class ElementTranslator
 
         $contents = $dom->getElementsByTagName('content');
 
-        
+
         foreach ($contents as $content) {
             $name = (string) $content->getAttribute('resname');
             $value = (string) $content->nodeValue;
-            
+
             if (strpos($name, '.') !== false) {
                 $parts = explode('.', $name);
                 $container =& $targetData;
@@ -93,7 +93,7 @@ class ElementTranslator
             $field = Craft::$app->fields->getFieldById($layoutField->id);
 
             $fieldHandle = $field->handle;
-            
+
             $fieldType = $field;
 
             $translator = Translations::$plugin->fieldTranslatorFactory->makeTranslator($fieldType);
@@ -111,7 +111,7 @@ class ElementTranslator
             } else {
                 $fieldPost = $translator->toPostArray($this, $element, $field);
             }
-            
+
             if (!is_array($fieldPost)) {
                 $fieldPost = array($fieldHandle => $fieldPost);
             }
@@ -145,10 +145,10 @@ class ElementTranslator
             $wordCount += Translations::$plugin->wordCounter->getWordCount($element->title);
             $wordCount += Translations::$plugin->wordCounter->getWordCount($element->slug);
         }
-        
+
         foreach($element->getFieldLayout()->getFields() as $layoutField) {
             $field = Craft::$app->fields->getFieldById($layoutField->id);
-            
+
             $wordCount += $this->getFieldWordCount($element, $field);
         }
 

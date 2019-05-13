@@ -38,7 +38,7 @@ use acclaro\translations\Translations;
 class Factory
 {
     private $nativeFieldTypes = array(
-        // Assets::class           => AssetsFieldTranslator::class,
+        Assets::class           => AssetsFieldTranslator::class,
         Categories::class       => CategoryFieldTranslator::class,
         Checkboxes::class       => MultiOptionsFieldTranslator::class,
         Dropdown::class         => SingleOptionFieldTranslator::class,
@@ -63,9 +63,9 @@ class Factory
         if ($field instanceof TranslatableFieldInterface) {
             return $field;
         }
-        
+
         $class = get_class($field);
-        
+
         if (array_key_exists($class, $this->nativeFieldTypes)) {
             $translatorClass = $this->nativeFieldTypes[$class];
 
@@ -78,6 +78,10 @@ class Factory
                     return new TagFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->tagRepository, Translations::$plugin->elementCloner);
                 case CategoryFieldTranslator::class:
                     return new CategoryFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->categoryRepository);
+                // case MatrixFieldTranslator::class:
+                //     return new MatrixFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
+                // case AssetsFieldTranslator::class:
+                //     return new AssetsFieldTranslator(Craft::$app, Translations::$plugin->wordCounter, Translations::$plugin->translationRepository);
             }
             return new $translatorClass(Craft::$app, Translations::$plugin->wordCounter);
         }
