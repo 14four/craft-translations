@@ -1074,7 +1074,7 @@ class BaseController extends Controller
 
             $order->logActivity(sprintf(Translations::$plugin->translator->translate('app', 'Order Submitted to %s'), $order->translator->getName()));
 
-            $drafts = Translations::$plugin->jobFactory->dispatchJob(CreateOrderTranslationDrafts::class, $order->getTargetSitesArray(), $order->getElements(), $order->title);
+            $drafts = Translations::$plugin->jobFactory->dispatchJob(CreateOrderTranslationDrafts::class, array_merge([$order->sourceSite], $order->getTargetSitesArray()), $order->getElements(), $order->title);
 
             foreach ($drafts as $draft) {
                 $file = Translations::$plugin->fileRepository->makeNewFile();

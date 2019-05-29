@@ -14,6 +14,7 @@ use Craft;
 use yii\base\Event;
 use craft\base\Plugin;
 use craft\web\UrlManager;
+use craft\fields\Assets;
 use craft\elements\Entry;
 use craft\services\Plugins;
 use craft\events\ModelEvent;
@@ -104,7 +105,7 @@ class Translations extends Plugin
                 $this->_onSaveEntry($event);
             }
         );
-        
+
         Event::on(
             EntryRevisions::class,
             EntryRevisions::EVENT_AFTER_PUBLISH_DRAFT,
@@ -127,7 +128,7 @@ class Translations extends Plugin
                     'Elements::EVENT_AFTER_SAVE_ELEMENT',
                     __METHOD__
                 );
-                
+
                 $this->_onSaveEntry($event);
             }
         );
@@ -183,7 +184,7 @@ class Translations extends Plugin
     {
         $subNavs = [];
         $navItem = parent::getCpNavItem();
-        
+
         $subNavs['dashboard'] = [
             'label' => 'Dashboard',
             'url' => 'translations',
@@ -231,7 +232,7 @@ class Translations extends Plugin
             if (Craft::$app->request->getIsCpRequest()) {
                 $this->_includeResouces(Craft::$app->getRequest()->getPathInfo());
             }
-            
+
             self::$plugin->translationRepository->loadTranslations();
 
             Event::on(
@@ -260,7 +261,7 @@ class Translations extends Plugin
                     'translations/translators/detail/<translatorId:\d+>' => 'translations/base/translator-detail',
                     'translations/about' => 'translations/base/about-index',
                     'translations/globals/<globalSetHandle:{handle}>/drafts/<draftId:\d+>' => 'translations/base/edit-global-set-draft',
-                    
+
                     'translations/orders/exportfile' => 'translations/files/export-file',
                     'translations/orders/importfile' => 'translations/files/import-file',
                 ]);
@@ -297,12 +298,12 @@ class Translations extends Plugin
         $numberOfCompleteOrders = count(self::$plugin->orderRepository->getCompleteOrders());
         self::$view->registerJs("$(function(){ Craft.Translations.ShowCompleteOrdersIndicator.init({$numberOfCompleteOrders}); });");
     }
-    
+
     private function _includeEditDraftResource($draftId)
     {
         self::$view->registerAssetBundle(EditDraftAssets::class);
     }
-    
+
     private function _includeEntryResources()
     {
         $orders = array();
@@ -320,12 +321,12 @@ class Translations extends Plugin
             'licenseStatus' => Craft::$app->plugins->getPluginLicenseKeyStatus('translations')
         ];
         $data = json_encode($data);
-        
+
         self::$view->registerAssetBundle(EntryAssets::class);
-        
+
         self::$view->registerJs("$(function(){ Craft.Translations.AddEntriesToTranslationOrder.init({$data}); });");
     }
-    
+
     private function _includeGlobalSetResources($globalSetHandle, $site = null)
     {
         $globalSet = self::$plugin->globalSetRepository->getSetByHandle($globalSetHandle, $site);
@@ -383,6 +384,28 @@ class Translations extends Plugin
         }
 
         $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
+
+        $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->targetSite);
+        $data = Translations::$plugin->elementTranslator->getTargetDataFromXml($currentFile->target);
+
+        foreach ($element->getFieldLayout()->getFields() as $layoutField) {
+            $field = Craft::$app->fields->getFieldById($layoutField->id);
+            $class = get_class($field);
+
+            if ($class == Assets::class && isset($data[$field->handle])) {
+                $assetsToTranslate = $data[$field->handle];
+
+                foreach($assetsToTranslate as $key => $value) {
+                    $asset = Craft::$app->assets->getAssetById($key, $currentFile->targetSite);
+
+                    foreach($value as $k => $v) {
+                        $asset[$k] = $v;
+                    }
+
+                    Craft::$app->elements->saveElement($asset);
+                }
+            }
+        }
 
         $currentFile->status = 'published';
 
