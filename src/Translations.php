@@ -386,23 +386,25 @@ class Translations extends Plugin
         $order = self::$plugin->orderRepository->getOrderById($currentFile->orderId);
 
         $element = Craft::$app->getElements()->getElementById($currentFile->elementId, null, $currentFile->targetSite);
-        $data = Translations::$plugin->elementTranslator->getTargetDataFromXml($currentFile->target);
+        if ($currentFile->target) {
+            $data = Translations::$plugin->elementTranslator->getTargetDataFromXml($currentFile->target);
 
-        foreach ($element->getFieldLayout()->getFields() as $layoutField) {
-            $field = Craft::$app->fields->getFieldById($layoutField->id);
-            $class = get_class($field);
+            foreach ($element->getFieldLayout()->getFields() as $layoutField) {
+                $field = Craft::$app->fields->getFieldById($layoutField->id);
+                $class = get_class($field);
 
-            if ($class == Assets::class && isset($data[$field->handle])) {
-                $assetsToTranslate = $data[$field->handle];
+                if ($class == Assets::class && isset($data[$field->handle])) {
+                    $assetsToTranslate = $data[$field->handle];
 
-                foreach($assetsToTranslate as $key => $value) {
-                    $asset = Craft::$app->assets->getAssetById($key, $currentFile->targetSite);
+                    foreach($assetsToTranslate as $key => $value) {
+                        $asset = Craft::$app->assets->getAssetById($key, $currentFile->targetSite);
 
-                    foreach($value as $k => $v) {
-                        $asset[$k] = $v;
+                        foreach($value as $k => $v) {
+                            $asset[$k] = $v;
+                        }
+
+                        Craft::$app->elements->saveElement($asset);
                     }
-
-                    Craft::$app->elements->saveElement($asset);
                 }
             }
         }
