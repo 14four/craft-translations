@@ -85,14 +85,16 @@
                                     <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
                                     <td>
                                     {% for file in files[element.id] %}
-                                        {% if not loop.first %}
-                                        <br>
-                                        {% endif %}
-                                        <a href="{{ fileUrls[file.id] }}">
-                                            {{ fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
-                                        </a>
-                                        {% if element.className != 'craft\\elements\\GlobalSet' %}
-                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                        {% if file.sourceSite != file.targetSite %}
+                                            {% if not loop.first %}
+                                            <br>
+                                            {% endif %}
+                                            <a href="{{ fileUrls[file.id] }}">
+                                                {{ fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
+                                            </a>
+                                            {% if element.className != 'craft\\elements\\GlobalSet' %}
+                                            <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                            {% endif %}
                                         {% endif %}
                                     {% endfor %}
                                     </td>

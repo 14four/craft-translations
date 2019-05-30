@@ -416,7 +416,7 @@ class Translations extends Plugin
         $areAllFilesPublished = true;
 
         foreach ($order->files as $file) {
-            if ($file->status !== 'published') {
+            if ($file->status !== 'published' && $file->sourceSite !== $file->targetSite) {
                 $areAllFilesPublished = false;
                 break;
             }
