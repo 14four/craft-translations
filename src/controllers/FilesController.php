@@ -70,10 +70,10 @@ class FilesController extends Controller
 
         //Filename Zip Folder
         $zipName = $orderAttributes['id'].'_'.$orderAttributes['sourceSite'];
-        
+
         // Set destination zip
         $zipDest = Craft::$app->path->getTempPath().'/'.$zipName.'_'.time().'.zip';
-        
+
         // Create zip
         $zip = new ZipArchive();
 
@@ -105,10 +105,10 @@ class FilesController extends Controller
 
                 $path = $tempPath.$filename;
 
-                
+
                 // $fileContent = new \SimpleXMLElement($file->source);
 
-                
+
                 if (!$zip->addFromString($filename, $file->source))
                 {
                     $errors[] = 'There was an error adding the file '.$filename.' to the zip: '.$zipName;
@@ -143,7 +143,7 @@ class FilesController extends Controller
                 'filename' => $filename
 			]));
         }
-        
+
         Craft::$app->getResponse()->sendFile($filename, null, ['inline' => true]);
 
         return FileHelper::unlink($filename);
@@ -170,7 +170,7 @@ class FilesController extends Controller
         $total_files = count($this->order->files);
 
 		try
-		{	
+		{
 			// Make sure a file was uploaded
 			if ($file && $file->size > 0)
 			{
@@ -182,7 +182,7 @@ class FilesController extends Controller
 				$fileName = Assets::prepareAssetName($file->name, true, true);
 				$folderPath = Craft::$app->path->getTempAssetUploadsPath().'/';
                 FileHelper::clearDirectory($folderPath);
- 				
+
 				//If is a Zip File
 				if ($file->extension === 'zip')
 				{
@@ -193,11 +193,11 @@ class FilesController extends Controller
 						if ($zip->open($folderPath.$fileName))
 						{
 							$xmlPath = $folderPath.$orderId;
-							
+
 							$zip->extractTo($xmlPath);
-							
+
 							$fileName = preg_replace('/\\.[^.\\s]{3,4}$/', '', $fileName);
-							
+
 							$files = FileHelper::findFiles($folderPath.$orderId);
 
 							foreach ($files as $key => $file) {
@@ -205,16 +205,16 @@ class FilesController extends Controller
 							}
 
 							FileHelper::removeDirectory($folderPath.$orderId.'/'.$fileName);
-							
+
 							$zip->close();
 
 							$dir = new \DirectoryIterator($xmlPath);
-							
-							foreach ($dir as $xml) 
+
+							foreach ($dir as $xml)
 							{
                                 //Process XML Files
-							    $this->processFile($xml, $xmlPath);								
-						    } 
+							    $this->processFile($xml, $xmlPath);
+						    }
 					    }
 					    else
 					    {
@@ -231,21 +231,21 @@ class FilesController extends Controller
 					$xmlPath = $folderPath.$orderId;
 
 					mkdir($xmlPath, 0777, true);
-					
+
 					//Upload File
 					if( move_uploaded_file($file->tempName, $xmlPath.'/'.$fileName))
 					{
 						//Process XML Files
 						$dir = new \DirectoryIterator($xmlPath);
-						foreach ($dir as $xml) 
+						foreach ($dir as $xml)
 						{
-							$this->processFile($xml, $xmlPath);	
+							$this->processFile($xml, $xmlPath);
 						}
 					}
 					else
 						$this->showUserMessages("Unable to upload file: $fileName");
 				}
-				
+
 			} else {
                 $this->showUserMessages("The file you are trying to import is empty.");
             }
@@ -258,7 +258,7 @@ class FilesController extends Controller
 
     /**
     * Process each file entry per orden
-    * Validates 
+    * Validates
 	*/
     public function processFile( $xml, $path )
     {
@@ -268,7 +268,7 @@ class FilesController extends Controller
 			if ($xml->getExtension() === 'xml' && $xml->isReadable())
 			{
                  $translated_file = $path . '/' . $xml;
-	     		
+
 	     		$xml_content = file_get_contents( $translated_file );
 
 	     		// check if the file is empty
@@ -283,7 +283,7 @@ class FilesController extends Controller
 	     		{
 	     			//Turn LibXml Internal Errors Reporting On!
 	     			libxml_use_internal_errors(true);
-	     			if (!$dom->loadXML( $xml_content )) 
+	     			if (!$dom->loadXML( $xml_content ))
 	     			{
 	     				$errors = $this->reportXmlErrors();
 	     				if($errors)
@@ -294,14 +294,14 @@ class FilesController extends Controller
 	     			}
 	     		}
 	     		catch(Exception $e)
-	     		{ 
+	     		{
 	     			$this->showUserMessages(Translations::$plugin->translator->translate('app', $e->getMessage()));
                  }
 
 	     		//Get DraftId & Lang Nodes From Document
 	 			$draftId = false;
 	 			$draftElements = $dom->getElementsByTagName('meta');
-				
+
 	 			//Source & Target Sites
 	 			$sites = $dom->getElementsByTagName('sites');
 	 			$sites = isset($sites[0]) ? $sites[0] : $sites;
@@ -313,22 +313,24 @@ class FilesController extends Controller
 	 			$langs = isset($langs[0]) ? $langs[0] : $langs;
 	 			$sourceLanguage = (string)$langs->getAttribute('source-language');
 	 			$targetLanguage = (string)$langs->getAttribute('target-language');
-	 			
+
                  //Iterate Over Draft XML Nodes
-	 			foreach ($draftElements as $node) 
-	 			{ 	
+	 			foreach ($draftElements as $node)
+	 			{
                     $name = (string) $node->getAttribute('name');
                     $value = (string) $node->getAttribute('content');
 
                     if ($name === 'draftId')
                     {
                         $draftId = (int) $value;
-                    }
-				} 
+                    } else if ($name === 'elementId') {
+						$elementId = (int) $value;
+					}
+				}
 
                 $draft_file = null;
 
-				foreach ($this->order->files as $file) 
+				foreach ($this->order->files as $file)
 				{
 	                if ($draftId === $file->draftId)
                     {	//Get File
@@ -339,15 +341,26 @@ class FilesController extends Controller
 	            //Validate If the draft was found
 	            if (is_null($draft_file))
 		    	{
-		    		$this->showUserMessages("The file you are trying to import does not contain a match for this entry.");
-		    		return;	
-		    	}
+					foreach ($this->order->files as $file)
+					{
+						if ($elementId === $file->elementId && $file->targetSite == (int)$targetSite && $file->status === 'new')
+						{	//Get File
+							$draft_file = Translations::$plugin->fileRepository->getFilesByOrderIdSite($this->order->id, (int)$targetSite, $elementId);
+						}
+					}
+				}
+
+
+				if (is_null($draft_file)){
+					$this->showUserMessages("The file you are trying to import does not contain a match for this entry.");
+					return;
+				}
 
 	            // Don't process published files
-		        if ($draft_file->status === 'published') 
+		        if ($draft_file->status === 'published')
 		        {
 		            $this->showUserMessages("This entry was already published.");
-		    		return;	
+		    		return;
 		        }
 
 		        //Translation Service
@@ -363,7 +376,7 @@ class FilesController extends Controller
 		        if ($success)
 		        {
 		        	$this->showUserMessages("File $xml imported successfully!", true);
-		        	
+
 		        	$this->order->logActivity(
 		                sprintf(Translations::$plugin->translator->translate('app', "File %s imported successfully!"), $xml)
 		            );
@@ -382,7 +395,7 @@ class FilesController extends Controller
 			{
 				//Invalid
 				$this->showUserMessages("File $xml is invalid, please try again with a valid xml file.");
-			}		
+			}
 		}
     }
 
@@ -399,7 +412,7 @@ class FilesController extends Controller
 			{
 				return false;
 			}
-    	} 
+    	}
     	return true;
     }
 
@@ -415,7 +428,7 @@ class FilesController extends Controller
     	else
     	{
     		Craft::$app->session->setError(Craft::t('app', $message));
-    	}	
+    	}
     }
 
     /**
@@ -426,7 +439,7 @@ class FilesController extends Controller
     {
     	$errors = array();
     	$libErros = libxml_get_errors();
-    	
+
     	$msg = false;
     	if ($libErros && isset($libErros[0]))
     	{

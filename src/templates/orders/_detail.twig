@@ -94,7 +94,7 @@
                 {% js 'new Craft.Translations.SyncOrder(\'sync-order\');' %}
             {% endif %}
         {% endif %}
-        
+
         {% if order.translator.service is defined and order.translator.service != 'export_import' %}
             <h2>{{ 'Order'|t }} #{{ order.serviceOrderId }} - {{ order.title }}</h2>
         {% else %}
@@ -112,7 +112,7 @@
                         <td>#{{ order.id }}</td>
                     {% endif %}
                 </tr>
-              
+
                 <tr>
                     <th>{{ 'Name'|t }}</th>
                     <td> <span class="order_label"> <span id="order_name"> {{ order.title }} </span> &nbsp;
@@ -166,11 +166,11 @@
                 </tr>
             </tbody>
         </table>
-   
+
     </div>
 
     <div class="translations-order-detail-entries right">
-        
+
         <h2>{{ 'Order Entries Translation Status'|t }}</h2>
 
         <table class="data">
@@ -204,7 +204,7 @@
 
     <div class="translations-order-detail-summary" style="margin-top: 3rem; width: 100%;">
             <h2>{{ 'Order Entries'|t }}</h2>
-           
+
             <table class="data">
                  <thead>
                     <tr>
@@ -218,7 +218,7 @@
                 </thead>
                 <tbody>
                     {% for element in elements %}
-                      
+
                             <tr>
                                 <td>
                                     <div class="element small hasstatus">
@@ -234,39 +234,45 @@
                                 <td>{{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span></td>
                                 <td>
                                 {% for file in files[element.id] %}
-                                    {% if not loop.first %}
-                                    <br>
-                                    {% endif %}
-                                    <a href="{{ fileUrls[file.id] }}">
-                                        {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
-                                    </a>
-                                    {% if element.className != 'craft\\elements\\GlobalSet' %}
-                                        <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                    {% if file.targetSite != sourceSite.id %}
+                                        {% if not loop.first %}
+                                        <br>
+                                        {% endif %}
+                                        <a href="{{ fileUrls[file.id] }}">
+                                            {{fileTargetSites[file.targetSite].name}} ({{ fileTargetSites[file.targetSite].language }})
+                                        </a>
+                                        {% if element.className != 'craft\\elements\\GlobalSet' %}
+                                            <a href="{{ webUrls[file.id] }}" target="_blank" data-icon="world" title="{{ 'Visit webpage'|t }}"></a>
+                                        {% endif %}
                                     {% endif %}
                                 {% endfor %}
                                 </td>
                                  <td>
                                     {% for file in files[element.id] %}
-                                        {% if not loop.first %}
-                                        <br>
+                                        {% if file.targetSite != sourceSite.id %}
+                                            {% if not loop.first %}
+                                            <br>
+                                            {% endif %}
+                                            <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
                                         {% endif %}
-                                        <span class="status {{ file.statusColor }}"></span>{{ file.statusLabel }}
                                     {% endfor %}
                                 </td>
                                  <td>
                                     {% for file in files[element.id] %}
-                                        {% if not loop.first %}
-                                        <br>
+                                        {% if file.targetSite != sourceSite.id %}
+                                            {% if not loop.first %}
+                                            <br>
+                                            {% endif %}
+                                            {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
                                         {% endif %}
-                                        {{ file.dateUpdated ? file.dateUpdated|date('M j, Y g:i a') : '--' }}
                                     {% endfor %}
                                 </td>
                              </tr>
-                         
+
                     {% endfor %}
                 </tbody>
             </table>
-        </div>  
+        </div>
 
 
 {% else %}
@@ -380,7 +386,7 @@
                         {{sourceSite.name}} <span class="light">({{ sourceSite.language }})</span>
                     </div>
                 </div>
-                
+
                 {{ forms.checkboxSelectField({
                     label: 'Target Site(s)'|t,
                     options: targetSiteCheckboxOptions,

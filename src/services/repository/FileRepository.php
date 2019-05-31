@@ -45,7 +45,7 @@ class FileRepository
 
         return $file;
     }
-    
+
     /**
      * @param  int|string $draftId
      * @return \acclaro\translations\models\FileModel
@@ -63,7 +63,7 @@ class FileRepository
         if (!$record) {
             return false;
         }
-        
+
         $file = new FileModel($record->toArray([
             'id',
             'orderId',
@@ -81,7 +81,7 @@ class FileRepository
 
         return $file;
     }
-    
+
     /**
      * @param  int|string $orderId
      * @return \acclaro\translations\models\FileModel
@@ -118,7 +118,47 @@ class FileRepository
 
         return $files ? $files : array();
     }
-    
+
+
+    /**
+     * @param  int|string $orderId
+     * @return \acclaro\translations\models\FileModel
+     */
+    public function getFilesByOrderIdSite(int $orderId, int $siteId, $elementId = null)
+    {
+        $attributes = array(
+            'orderId' => $orderId,
+            'targetSite' => $siteId,
+        );
+
+        if ($elementId) {
+            $attributes['elementId'] = $elementId;
+        }
+
+        $record = FileRecord::findOne($attributes);
+
+        if (!$record) {
+            return false;
+        }
+
+        $file = new FileModel($record->toArray([
+            'id',
+            'orderId',
+            'elementId',
+            'draftId',
+            'sourceSite',
+            'targetSite',
+            'status',
+            'wordCount',
+            'source',
+            'target',
+            'previewUrl',
+            'serviceFileId',
+        ]));
+
+        return $file;
+    }
+
     /**
      * @param  int|string $siteId
      * @return \acclaro\translations\models\FileModel
@@ -212,9 +252,9 @@ class FileRepository
         } else {
             $record = new FileRecord();
         }
-        
+
         $record->setAttributes($file->getAttributes(), false);
-        
+
         if (!$record->validate()) {
             $file->addErrors($record->getErrors());
 
