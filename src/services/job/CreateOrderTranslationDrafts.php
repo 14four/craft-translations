@@ -37,7 +37,7 @@ class CreateOrderTranslationDrafts implements JobInterface
      * @var string
      */
     protected $orderName;
-    
+
     /**
      * @var string
      */
@@ -55,9 +55,9 @@ class CreateOrderTranslationDrafts implements JobInterface
         $targetSite = null
     ) {
         $this->targetSites = $targetSites;
-        
+
         $this->elements = ($elements instanceof Element) ? $elements->all() : (array) $elements;
-        
+
         $this->orderName = $orderName;
     }
 

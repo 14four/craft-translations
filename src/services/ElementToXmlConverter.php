@@ -118,7 +118,9 @@ class ElementToXmlConverter
 
         $body = $xml->appendChild($dom->createElement('body'));
 
-        foreach (Translations::$plugin->elementTranslator->toTranslationSource($element) as $key => $value) {
+        $transElement = Craft::$app->elements->getElementById($element->id, null, $targetSite);
+
+        foreach (Translations::$plugin->elementTranslator->toTranslationSource($transElement) as $key => $value) {
             $translation = $dom->createElement('content');
 
             $translation->setAttribute('resname', $key);

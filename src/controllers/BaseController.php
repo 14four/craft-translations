@@ -1078,7 +1078,7 @@ class BaseController extends Controller
 
             foreach ($drafts as $draft) {
                 $file = Translations::$plugin->fileRepository->makeNewFile();
-                $element = Craft::$app->getElements()->getElementById($draft->id, null, $order->sourceSite);
+                $element = Craft::$app->getElements()->getElementById($draft->id, null, $order->siteId);
 
                 if ($draft instanceof GlobalSet) {
                     $targetSite = $draft->site;
