@@ -74,15 +74,15 @@ class Export_ImportTranslationService implements TranslationServiceInterface
     }
 
     public function updateIOFile(JobFactory $jobFactory, Order $order, FileModel $file, $target)
-    { 
-        if (empty($target)) 
+    {
+        if (empty($target))
         {
             return;
         }
 
         $file->status = 'complete';
-       
-        if ($target) 
+
+        if ($target)
         {
             $file->target = $target;
 
@@ -94,9 +94,41 @@ class Export_ImportTranslationService implements TranslationServiceInterface
                 $draft = Translations::$plugin->draftRepository->getDraftById($file->draftId, $file->targetSite);
             }
 
+            if (!isset($draft)) {
+                $draft = $this->createEntryDraft($element, $file->targetSite);
+            }
+
             $jobFactory->dispatchJob(UpdateDraftFromXml::class, $element, $draft, $target, $file->sourceSite, $file->targetSite);
 
         }
+    }
+
+    public function createEntryDraft(craft\elements\Entry $entry, $site)
+    {
+        $draftConfig = [
+            'name' => sprintf('%s [%s]', 'tmp-for-import', $site),
+            'id' => $entry->id,
+            'sectionId' => $entry->sectionId,
+            'creatorId' => Craft::$app->session && Craft::$app->getUser() ? Craft::$app->getUser()->id : '1',
+            'typeId' => $entry->typeId,
+            'slug' => $entry->slug,
+            'postDate' => $entry->postDate,
+            'expiryDate' => $entry->expiryDate,
+            'enabled' => $entry->enabled,
+            'title' => $entry->title,
+            'authorId' => $entry->authorId
+        ];
+
+        $supportedSites = Translations::$plugin->entryRepository->getSupportedSites($entry);
+
+        $draftConfig['enabledForSite'] = in_array($site, $supportedSites);
+        $draftConfig['siteId'] = $site;
+
+        $draft = Translations::$plugin->draftRepository->makeNewDraft($draftConfig);
+
+        Translations::$plugin->draftRepository->saveDraft($draft);
+
+        return $draft;
     }
 
     /**

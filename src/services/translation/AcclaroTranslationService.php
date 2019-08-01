@@ -28,7 +28,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
      * @var boolean
      */
     protected $sandboxMode = false;
-    
+
     /**
      * @var acclaro\translations\services\api\AcclaroApiClient
      */
@@ -220,7 +220,7 @@ class AcclaroTranslationService implements TranslationServiceInterface
     {
         return $this->acclaroApiClient->getLanguages();
     }
-    
+
     public function getLanguagePairs($source)
     {
         return $this->acclaroApiClient->getLanguagePairs($source);

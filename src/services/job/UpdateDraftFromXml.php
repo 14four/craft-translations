@@ -92,9 +92,13 @@ class UpdateDraftFromXml implements JobInterface
         }
 
         $post = Translations::$plugin->elementTranslator->toPostArrayFromTranslationTarget($this->element, $this->sourceSite, $this->targetSite, $targetData);
-        
-        $this->draft->setFieldValues($post);
-        
+
+        try {
+            $this->draft->setFieldValues($post);
+        } catch(Exception $e) {
+            Craft::dd($post);
+        }
+
         $this->draft->siteId = $this->targetSite;
 
         // save the draft
